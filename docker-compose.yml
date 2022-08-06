@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  proxy:
+    image: nginx:latest
+    container_name: proxy
+    ports:
+      - "80:80"
+      - "433:433"
+    expose:
+      - "80"
+      - "433"
+    volumes:
+      - ./proxy/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./proxy/html:/usr/share/nginx/html
+    networks:
+      - nest-networks
+    depends_on:
+      - api-node
+    restart: "unless-stopped"
+
+  nodejs:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      # Only will build development stage from our dockerfile
+    container_name: nodejs
+    volumes:
+      - ./:/app
+    networks:
+      - nest-networks
+    environment:
+      - NODE_ENV:development
+    # Run a command against the development stage of the image
+    #command: pnpm start:dev
+    ports:
+      - 3000:3000
+    restart: "unless-stopped"
+
+networks:
+  nest-networks:
+    driver: bridge
+    external: true
+    internal: true
